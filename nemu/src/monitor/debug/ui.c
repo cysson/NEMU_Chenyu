@@ -83,6 +83,28 @@ static int cmd_info(char* args){
 }
 
 
+// execute scan memory
+static int cmd_x(char* args){
+	char* N = strtok(args, " ");
+	char* EXPR = strtok(NULL, " ");
+	int len;
+	lnaddr_t address;
+	//lnaddr_read和lnaddr_write两个函数用来对内存进行读写，
+	//lnaddr_read函数需要传入两个参数，分别为起始地址和扫描长度。
+	sscanf(N, "%d", &len);  
+    sscanf(EXPR, "%x", &address);
+
+	printf("0x%x", address);
+	int i;
+	for(i = 0; i < len; i++){
+		printf("%08x ",lnaddr_read(address,4));  
+        address += 4;  
+	}  
+	printf("\n");  
+    return 0;  
+}
+
+
 
 static struct {
 	char *name;
@@ -94,8 +116,8 @@ static struct {
 	{ "q", "Exit NEMU", cmd_q },
 	{ "si", "Single Step", cmd_si},
 	{"info", "Print Register", cmd_info},
+	{"x", "scan memory", cmd_x},
 	/* TODO: Add more commands */
-
 };
 
 
