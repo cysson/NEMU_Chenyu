@@ -68,7 +68,7 @@ static int cmd_info(char* args){
 		printf("no arguments provided\n");
 		return -1;
 	} else{
-			if(strcmp(arg, "r") == 0){
+			if(strcmp(arg, "-r") == 0){
 				int i;
 				for(i = 0;i < 8; i++){
 					printf("%s \t%x \t%d\n",regsl[i],cpu.gpr[i]._32,cpu.gpr[i]._32);
