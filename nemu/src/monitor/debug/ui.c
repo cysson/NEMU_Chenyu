@@ -51,6 +51,28 @@ static struct {
 
 };
 
+// execuate single step
+static int cmd_si(char* args){
+	char* arg = strtok(NULL, " ");//use space to seperate
+	int step = 0;
+	
+	if(arg == NULL){
+		cpu_exec(1); //no arg,execute 1 step
+		return 0;
+	}
+
+	sscanf(arg, "%d", &step);//str2int, store in step
+
+	if(step < -1){
+		printf("Error, N is an integer greater than or equal to -1\n");
+		return 0;
+	}
+
+	cpu_exec(step);
+	return 0;
+
+}
+
 #define NR_CMD (sizeof(cmd_table) / sizeof(cmd_table[0]))
 
 static int cmd_help(char *args) {
