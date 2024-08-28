@@ -38,7 +38,7 @@ static int cmd_q(char *args) {
 
 static int cmd_help(char *args);
 
-// execuate single step
+// execute single step
 static int cmd_si(char* args){
 	char* arg = strtok(NULL, " ");//use space to seperate
 	int step = 0;
@@ -60,6 +60,30 @@ static int cmd_si(char* args){
 
 }
 
+//execute print register
+static int cmd_info(char* args){
+	char* arg = strtok(args, " ");
+
+	if(arg == NULL){
+		printf("no arguments provided\n");
+		return -1;
+	} else{
+			if(strcmp(arg, "r") == 0){
+				int i;
+				for(i = 0;i < 8; i++){
+					printf("%s \t%x \t%d\n",regsl[i],cpu.gpr[i]._32,cpu.gpr[i]._32);
+				}
+				printf("$eip \t%x \t%d\n", cpu.eip, cpu.eip);
+				return 0;
+			}else{
+				printf("Error,no valid arguments.");
+				return -1;
+			}
+	} 
+}
+
+
+
 static struct {
 	char *name;
 	char *description;
@@ -69,6 +93,7 @@ static struct {
 	{ "c", "Continue the execution of the program", cmd_c },
 	{ "q", "Exit NEMU", cmd_q },
 	{ "si", "Single Step", cmd_si},
+	{"info", "Print Register", cmd_info},
 	/* TODO: Add more commands */
 
 };
