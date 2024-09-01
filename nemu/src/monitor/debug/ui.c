@@ -129,6 +129,7 @@ static struct {
 	{ "si", "Single Step", cmd_si},
 	{"info", "Print Register", cmd_info},
 	{"x", "scan memory", cmd_x},
+	{"p", "expression calculation", cmd_p}
 	/* TODO: Add more commands */
 };
 
