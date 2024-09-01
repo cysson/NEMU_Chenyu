@@ -7,7 +7,7 @@
 #include <regex.h>
 
 enum {
-	NOTYPE = 256, EQ
+	NOTYPE = 256, EQ, NOTEQUAL, NUM, HEXNUM, REGNAME, AND, OR, NOT
 
 	/* TODO: Add more token types */
 
@@ -23,8 +23,23 @@ static struct rule {
 	 */
 
 	{" +",	NOTYPE},				// spaces
+
 	{"\\+", '+'},					// plus
-	{"==", EQ}						// equal
+	{"\\-", '-'},					//minus
+	{"\\*", '*'},					//multiply
+	{"\\/", '/'},					//divide
+	{"\\(", '('},					//left para
+	{"\\)", ')'},					//right para
+	{"==", EQ},						// equal
+	{"!=", NOTEQUAL},				//not equal
+
+	{"[0-9]+", NUM},				//dec number
+	{"0x[0-9,a-f]+", HEXNUM},		//hex number
+	{"\\$[a-z]{2, 3}", REGNAME},	//reg name
+
+	{"&&", AND},					//logical and
+	{"\\|\\|", OR},					//logical or
+	{"!",NOT}						//logical not	
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -70,17 +85,22 @@ static bool make_token(char *e) {
 				char *substr_start = e + position;
 				int substr_len = pmatch.rm_eo;
 
-				Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s", i, rules[i].regex, position, substr_len, substr_len, substr_start);
+				Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s", 
+                    i, rules[i].regex, position, substr_len, substr_len, substr_start);
+				
+				// 移动位置
 				position += substr_len;
 
-				/* TODO: Now a new token is recognized with rules[i]. Add codes
-				 * to record the token in the array `tokens'. For certain types
-				 * of tokens, some extra actions should be performed.
-				 */
-
-				switch(rules[i].token_type) {
-					default: panic("please implement me");
+				// 如果匹配的是空格，跳过
+				if(rules[i].token_type == NOTYPE) {
+					break;
 				}
+
+				// 保存匹配到的 token
+				tokens[nr_token].type = rules[i].token_type;
+				memset(tokens[nr_token].str, 0, sizeof(tokens[nr_token].str));
+				strncpy(tokens[nr_token].str, substr_start, substr_len);
+				nr_token++;
 
 				break;
 			}
@@ -95,14 +115,116 @@ static bool make_token(char *e) {
 	return true; 
 }
 
+
 uint32_t expr(char *e, bool *success) {
-	if(!make_token(e)) {
+	if (!make_token(e)) {
 		*success = false;
 		return 0;
 	}
 
-	/* TODO: Insert codes to evaluate the expression. */
-	panic("please implement me");
+	// 调用 eval 函数来计算表达式的值
+	*success = true;
+	return eval(0, nr_token - 1);
+}
+
+uint32_t eval(int p, int q) {
+	if (p > q) {
+		panic("Bad expression");
+	}
+
+	if (p == q) {
+		switch (tokens[p].type) {
+			case NUM: {
+				uint32_t num;
+				sscanf(tokens[p].str, "%d", &num);
+				return num;
+			}
+			case HEXNUM: {
+				uint32_t num;
+				sscanf(tokens[p].str, "%x", &num);
+				return num;
+			}
+			default:
+				panic("Unexpected token type");
+		}
+	}
+
+	if (check_parentheses(p, q)) {
+		return eval(p + 1, q - 1);
+	}
+
+	int op = find_main_operator(p, q);
+
+	if (tokens[op].type == NOT) {
+		uint32_t val = eval(op + 1, q);
+		return !val;
+	}
+
+	uint32_t val1 = eval(p, op - 1);
+	uint32_t val2 = eval(op + 1, q);
+
+	switch (tokens[op].type) {
+		case '+': return val1 + val2;
+		case '-': return val1 - val2;
+		case '*': return val1 * val2;
+		case '/': return val1 / val2;
+		case EQ: return val1 == val2;
+		case NOTEQUAL: return val1 != val2;
+		case AND: return val1 && val2;
+		case OR: return val1 || val2;
+		default:
+			panic("Unexpected operator");
+	}
+
 	return 0;
 }
+
+bool check_parentheses(int p, int q) {
+	if (tokens[p].type == '(' && tokens[q].type == ')') {
+		int count = 0;
+		for (int i = p; i <= q; i++) {
+			if (tokens[i].type == '(') count++;
+			if (tokens[i].type == ')') count--;
+			if (count == 0 && i < q) return false;
+		}
+		return count == 0;
+	}
+	return false;
+}
+
+int find_main_operator(int p, int q) {
+	int i;
+	int level = 0;
+	int op = -1;
+	int priority = -1;
+
+	for (i = p; i <= q; i++) {
+		if (tokens[i].type == '(') {
+			level++;
+		} else if (tokens[i].type == ')') {
+			level--;
+		} else if (level == 0) {
+			int cur_priority = -1;
+			switch (tokens[i].type) {
+				case OR: cur_priority = 1; break;
+				case AND: cur_priority = 2; break;
+				case EQ:
+				case NOTEQUAL: cur_priority = 3; break;
+				case '+':
+				case '-': cur_priority = 4; break;
+				case '*':
+				case '/': cur_priority = 5; break;
+				case NOT: cur_priority = 6; break;
+				default: break;
+			}
+			if (cur_priority > priority) {
+				priority = cur_priority;
+				op = i;
+			}
+		}
+	}
+
+	return op;
+}
+
 
