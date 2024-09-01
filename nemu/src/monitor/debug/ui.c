@@ -60,6 +60,18 @@ static int cmd_si(char* args){
 
 }
 
+//execute expression evaluation task 03
+static int cmd_p(char* args){
+	bool success;
+	if(args){
+		uint32_t r = expr(args, &success);
+        if(success){
+			printf("0x%08x\t%d\n", r, r);
+        } else{printf("Bad expression\n");}
+	}
+	return 0;
+}
+
 //execute print register
 static int cmd_info(char* args){
 	char* arg = strtok(args, " ");
