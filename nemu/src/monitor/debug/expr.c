@@ -29,22 +29,23 @@ static struct rule {
 	{" +",	NOTYPE},				// spaces
 
 	{"\\+", '+'},					// plus
-	{"\\-", '-'},					//minus
-	{"\\*", '*'},					//multiply
-	{"\\/", '/'},					//divide
-	{"\\(", '('},					//left para
-	{"\\)", ')'},					//right para
+	{"\\-", '-'},					// minus
+	{"\\*", '*'},					// multiply
+	{"\\/", '/'},					// divide
+	{"\\(", '('},					// left parenthesis
+	{"\\)", ')'},					// right parenthesis
 	{"==", EQ},						// equal
-	{"!=", NOTEQUAL},				//not equal
+	{"!=", NOTEQUAL},				// not equal
 
-	{"[0-9]+", NUM},				//dec number
-	{"0x[0-9,a-f]+", HEXNUM},		//hex number
-	{"\\$[a-z]{2, 3}", REGNAME},	//reg name
+	{"[0-9]+", NUM},				// decimal number
+	{"0x[0-9a-f]+", HEXNUM},		// hexadecimal number
+	{"\\$[a-z]{2,3}", REGNAME},		// register name, fixed: no space in {2,3}
 
-	{"&&", AND},					//logical and
-	{"\\|\\|", OR},					//logical or
-	{"!",NOT}						//logical not	
+	{"&&", AND},					// logical and
+	{"\\|\\|", OR},					// logical or
+	{"!", NOT}						// logical not
 };
+
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
 
