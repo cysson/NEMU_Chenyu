@@ -6,6 +6,10 @@
 #include <sys/types.h>
 #include <regex.h>
 
+uint32_t eval(int p, int q);
+bool check_parentheses(int p, int q);
+int find_main_operator(int p, int q);
+
 enum {
 	NOTYPE = 256, EQ, NOTEQUAL, NUM, HEXNUM, REGNAME, AND, OR, NOT
 
@@ -182,7 +186,8 @@ uint32_t eval(int p, int q) {
 bool check_parentheses(int p, int q) {
 	if (tokens[p].type == '(' && tokens[q].type == ')') {
 		int count = 0;
-		for (int i = p; i <= q; i++) {
+		int i;
+		for (i = p; i <= q; i++) {
 			if (tokens[i].type == '(') count++;
 			if (tokens[i].type == ')') count--;
 			if (count == 0 && i < q) return false;
