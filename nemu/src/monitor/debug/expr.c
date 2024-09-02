@@ -5,10 +5,11 @@
  */
 #include <sys/types.h>
 #include <regex.h>
+#include <stdlib.h>
 
 uint32_t eval(int p, int q);
 bool check_parentheses(int p, int q);
-int find_main_operator(int p, int q);
+int find_dominant_operator(int p, int q);
 
 enum {
 	NOTYPE = 256, EQ, NOTEQUAL, NUM, HEXNUM, REGNAME, AND, OR, NOT
@@ -90,9 +91,6 @@ uint32_t registers[] = {
     0x900  // eip
 };
 
-enum {
-    R_EAX, R_EBX, R_ECX, R_EDX, R_ESP, R_EBP, R_ESI, R_EDI, R_EIP
-};
 
 //对每一个符号进行分类，再将各个类型存储在tokens[]数组中
 static bool make_token(char *e) {
@@ -175,7 +173,7 @@ uint32_t eval(int p, int q) {
                 if (strcmp(tokens[p].str, "$ebp") == 0) return registers[R_EBP];
                 if (strcmp(tokens[p].str, "$esi") == 0) return registers[R_ESI];
                 if (strcmp(tokens[p].str, "$edi") == 0) return registers[R_EDI];
-                if (strcmp(tokens[p].str, "$eip") == 0) return registers[R_EIP];
+                
                 printf("Unknown register: %s\n", tokens[p].str);
                 exit(1);
             default:
@@ -284,8 +282,8 @@ int find_dominant_operator(int p, int q) {
     int op = -1;
     int level = 0;
     int lowest_priority = 7; // 设置为比任何运算符的优先级都高的值
-
-    for (int i = p; i <= q; i++) {
+    int i;
+    for (i = p; i <= q; i++) {
         if (tokens[i].type == '(') {
             level++;
         } else if (tokens[i].type == ')') {
@@ -315,83 +313,87 @@ int find_dominant_operator(int p, int q) {
     return op;
 }
 
-uint32_t eval(int p, int q) {
-    if (p > q) {
-        printf("Bad expression\n");
-        exit(1);
-    } else if (p == q) {
-        uint32_t num = 0;
-        switch (tokens[p].type) {
-            case NUM:
-                sscanf(tokens[p].str, "%d", &num);
-                return num;
-            case HEXNUM:
-                sscanf(tokens[p].str, "%x", &num);
-                return num;
-            default:
-                printf("Unexpected token type: %d\n", tokens[p].type);
-                exit(1);
-        }
-    } else if (check_parentheses(p, q)) {
-        return eval(p + 1, q - 1);
-    } else {
-        int op = find_dominant_operator(p, q);
-        if (op == -1) {
-            printf("No operator found\n");
-            exit(1);
-        }
+// uint32_t eval(int p, int q) {
+//     if (p > q) {
+//         printf("Bad expression\n");
+//         exit(1);
+//     } else if (p == q) {
+//         uint32_t num = 0;
+//         switch (tokens[p].type) {
+//             case NUM:
+//                 sscanf(tokens[p].str, "%d", &num);
+//                 return num;
+//             case HEXNUM:
+//                 sscanf(tokens[p].str, "%x", &num);
+//                 return num;
+//             default:
+//                 printf("Unexpected token type: %d\n", tokens[p].type);
+//                 exit(1);
+//         }
+//     } else if (check_parentheses(p, q)) {
+//         return eval(p + 1, q - 1);
+//     } else {
+//         int op = find_dominant_operator(p, q);
+//         if (op == -1) {
+//             printf("No operator found\n");
+//             exit(1);
+//         }
 
-        uint32_t val1 = eval(p, op - 1);
-        uint32_t val2 = eval(op + 1, q);
+//         uint32_t val1 = eval(p, op - 1);
+//         uint32_t val2 = eval(op + 1, q);
 
-        switch (tokens[op].type) {
-            case '+': return val1 + val2;
-            case '-': return val1 - val2;
-            case '*': return val1 * val2;
-            case '/': return val1 / val2;
-            case EQ: return val1 == val2;
-            case NOTEQUAL: return val1 != val2;
-            case AND: return val1 && val2;
-            case OR: return val1 || val2;
-            case NOT: return !val2;
-            default:
-                printf("Unexpected operator: %d\n", tokens[op].type);
-                exit(1);
-        }
-    }
+//         switch (tokens[op].type) {
+//             case '+': return val1 + val2;
+//             case '-': return val1 - val2;
+//             case '*': return val1 * val2;
+//             case '/': return val1 / val2;
+//             case EQ: return val1 == val2;
+//             case NOTEQUAL: return val1 != val2;
+//             case AND: return val1 && val2;
+//             case OR: return val1 || val2;
+//             case NOT: return !val2;
+//             default:
+//                 printf("Unexpected operator: %d\n", tokens[op].type);
+//                 exit(1);
+//         }
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
-uint32_t expr(char *e, bool *success) {
-    if (!make_token(e)) {
-        *success = false;
-        return 0;
-    }
+// uint32_t expr(char *e, bool *success) {
+//     if (!make_token(e)) {
+//         *success = false;
+//         return 0;
+//     }
 
-    *success = true;
-    return eval(0, nr_token - 1);
-}
+//     *success = true;
+//     return eval(0, nr_token - 1);
+// }
 
-int main() {
-    init_regex();
+// int main() {
+//     init_regex();
 
-    char expression[256];
-    bool success;
+//     char expression[256];
+//     bool success;
 
-    printf("Enter an expression: ");
-    fgets(expression, 256, stdin);
-    expression[strcspn(expression, "\n")] = '\0';
+//     printf("Enter an expression: ");
+//     if (fgets(expression, 256, stdin) == NULL) {
+//     printf("读取输入时发生错误。\n");
+//     return 1;
+//     }
 
-    uint32_t result = expr(expression, &success);
+//     expression[strcspn(expression, "\n")] = '\0';
 
-    if (success) {
-        printf("Result: %u\n", result);
-    } else {
-        printf("Invalid expression.\n");
-    }
+//     uint32_t result = expr(expression, &success);
 
-    return 0;
-}
+//     if (success) {
+//         printf("Result: %u\n", result);
+//     } else {
+//         printf("Invalid expression.\n");
+//     }
+
+//     return 0;
+// }
 
 
