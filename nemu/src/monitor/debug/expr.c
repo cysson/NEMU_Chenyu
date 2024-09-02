@@ -181,7 +181,8 @@ uint32_t eval(int p, int q) {
                 exit(1);
         }
     } else if (check_parentheses(p, q)) {
-        return eval(p + 1, q - 1);
+		// 如果括号平衡，则递归求值括号内的表达式
+		return eval(p + 1, q - 1);
     } else {
         int op = find_dominant_operator(p, q);
         if (op == -1) {
@@ -263,20 +264,30 @@ uint32_t eval(int p, int q) {
 
 // 	return 0;
 // }
-
 bool check_parentheses(int p, int q) {
-	if (tokens[p].type == '(' && tokens[q].type == ')') {
-		int count = 0;
-		int i;
-		for (i = p; i <= q; i++) {
-			if (tokens[i].type == '(') count++;
-			if (tokens[i].type == ')') count--;
-			if (count == 0 && i < q) return false;
-		}
-		return count == 0;
+	int count = 0;
+    int i;
+	for (i = p; i <= q; i++) {
+		if (tokens[i].type == '(') count++;
+		if (tokens[i].type == ')') count--;
+		if (count < 0) return false;  // 如果在此过程中出现右括号多于左括号，直接返回false
 	}
-	return false;
+	return count == 0; // 判断最终括号是否平衡
 }
+
+// bool check_parentheses(int p, int q) {
+// 	if (tokens[p].type == '(' && tokens[q].type == ')') {
+// 		int count = 0;
+// 		int i;
+// 		for (i = p; i <= q; i++) {
+// 			if (tokens[i].type == '(') count++;
+// 			if (tokens[i].type == ')') count--;
+// 			if (count == 0 && i < q) return false;
+// 		}
+// 		return count == 0;
+// 	}
+// 	return false;
+// }
 
 int find_dominant_operator(int p, int q) {
     int op = -1;
