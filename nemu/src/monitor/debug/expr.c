@@ -292,7 +292,7 @@ bool check_parentheses(int p, int q) {
 int find_dominant_operator(int p, int q) {
     int op = -1;
     int level = 0;
-    int lowest_priority = 7; // 设置为比任何运算符的优先级都高的值
+    int lowest_priority = 8; // 设置为比任何运算符的优先级都高的值
     int i;
     for (i = p; i <= q; i++) {
         if (tokens[i].type == '(') {
