@@ -13,4 +13,9 @@ typedef struct watchpoint {
 
 } WP;
 
+WP* new_wp();   // 创建一个新的监视点
+int free_wp();     // 释放一个监视点
+int test_change();       // 检测监视点值是否变化
+void print_wp();
+int delete_wp(int num);
 #endif

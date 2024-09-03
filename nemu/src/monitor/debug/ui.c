@@ -8,7 +8,8 @@
 #include <readline/history.h>
 
 void cpu_exec(uint32_t);
-
+WP* new_wp();
+int free_wp();
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 char* rl_gets() {
 	static char *line_read = NULL;
@@ -151,9 +152,11 @@ static struct {
 	{ "c", "Continue the execution of the program", cmd_c },
 	{ "q", "Exit NEMU", cmd_q },
 	{ "si", "Single Step", cmd_si},
-	{"info", "Print Register", cmd_info},
+	{"info", "Print Register or watchpoint", cmd_info},
 	{"x", "scan memory", cmd_x},
-	{"p", "expression calculation", cmd_p}
+	{"p", "expression calculation", cmd_p},
+	{"w", "add watchpoint", cmd_w},
+	{"d", "delete watchpoint", cmd_d}
 	/* TODO: Add more commands */
 };
 
