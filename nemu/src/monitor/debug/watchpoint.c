@@ -6,7 +6,7 @@
 
 static WP wp_pool[NR_WP];
 static WP *head, *free_;
-int test_change();
+bool check_wp ();
 
     
 void init_wp_pool() {
@@ -68,39 +68,26 @@ int free_wp(WP *wp) {
 	return 1;
 }
 
-int test_change() {
-    WP *p = head;  // Pointer to the current watchpoint
-    bool success = false;  // Used to indicate whether the expression evaluation succeeded
-    int changed = 0;       // Used to record if any watchpoint has changed
-
-    // Traverse through all watchpoints
-    while (p != NULL) {
-        // Evaluate the new value of the current watchpoint expression
-        uint32_t new_value = expr(p->exp, &success);
-
-        // If the expression evaluation failed, output an error message
-        if (!success) {
-            printf("Failed to evaluate expression: %s\n", p->exp);
-            return 0;  // If evaluation fails, return immediately
+bool check_wp(){
+    WP* wp;
+    wp = head;
+    bool suc, key;
+    key = true;
+    while(wp != NULL){
+        int val = expr(wp->exp, &suc);  // 使用 wp->exp
+        if(!suc) assert(1);
+        if(wp->value != val){  // 使用 wp->value
+            key = false;
+            printf("Hint breakpoint %d at address 0x%08x\n", wp->NO, cpu.eip);
+            printf("Watchpoint %d: %s\n", wp->NO, wp->exp);  // 使用 wp->exp
+            printf("Old value = %d\n", wp->value);  // 使用 wp->value
+            printf("New value = %d\n", val);
+            wp->value = val;  // 更新 wp->value
         }
-
-        // If the expression value has changed
-        if (new_value != p->value) {
-            // Output the watchpoint details, including the watchpoint number, expression, old value, and new value
-            printf("Watchpoint %d: %s value changed from %d to %d\n", p->NO, p->exp, p->value, new_value);
-            
-            // Update the watchpoint's value to the new value
-            p->value = new_value;
-            
-            // Indicate that a watchpoint value has changed
-            changed = 1;
-        }
-
-        // Move to the next watchpoint
-        p = p->next;
+        wp = wp->next;
     }
-
-    return changed;  // Return 1 if any value changed, 0 if no values changed
+    
+    return key;
 }
 
 

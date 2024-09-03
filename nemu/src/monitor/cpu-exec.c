@@ -77,9 +77,12 @@ void cpu_exec(volatile uint32_t n) {
 	// if(change){
 	// 	nemu_state = STOP;
 	// }
-	if (test_change()) {
-    nemu_state = STOP;  // 如果有监视点的值发生变化，停止CPU执行
-}
+	// if (test_change()) {
+    // nemu_state = STOP;  // 如果有监视点的值发生变化，停止CPU执行
+		/* TODO: check watchpoints here. */
+	bool jug = check_wp();
+	if ( !jug ) nemu_state = STOP;
+
 
 #ifdef HAS_DEVICE
 		extern void device_update();
