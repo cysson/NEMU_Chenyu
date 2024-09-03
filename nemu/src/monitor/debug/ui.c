@@ -72,7 +72,7 @@ static int cmd_p(char* args){
 	return 0;
 }
 
-//execute print register
+//execute print register and watchpoint
 static int cmd_info(char* args){
 	char* arg = strtok(args, " ");
 
@@ -86,12 +86,15 @@ static int cmd_info(char* args){
 					printf("%s \t%x \t%d\n",regsl[i],cpu.gpr[i]._32,cpu.gpr[i]._32);
 				}
 				printf("$eip \t%x \t%d\n", cpu.eip, cpu.eip);
-				return 0;
+				
 			}else{
-				printf("Error,no valid arguments.");
-				return -1;
+				print_wp();
+				// printf("Error,no valid arguments.");
+			
 			}
-	} 
+			
+	}
+	return 0; 
 }
 
 
@@ -115,6 +118,27 @@ static int cmd_x(char* args){
 	printf("\n");  
     return 0;  
 }
+
+
+//execute add watchingpoint
+static int cmd_w(char* args){
+	WP* n_wp = new_wp(args);
+	printf("watchpoint %d: %s is set successfully.\n", n_wp->NO, n_wp->exp);
+	return 0;
+}
+
+//execute delete watchingpoint
+static int cmd_d(char* args){
+	char* arg = strtok(NULL, " ");
+	int num = 0;
+	sscanf(arg, "%d", &num);
+	bool ans = delete_wp(num);
+	if(ans){
+		printf("delete watchpoint %d successfully.\n", num);
+	} else {printf("There is no watchpoint whose NO. is%d.\n", num);}
+	return 0;
+}
+
 
 
 
