@@ -123,9 +123,19 @@ static int cmd_x(char* args){
 
 //execute add watchingpoint
 static int cmd_w(char* args){
-	WP* n_wp = new_wp(args);
-	printf("watchpoint %d: %s is set successfully.\n", n_wp->NO, n_wp->exp);
-	return 0;
+    if (args == NULL) {
+        printf("Argument lost, you may mean\n\tw [expression]\n");
+        return 0;
+	}
+    WP *wp;
+    bool suc;
+    wp = new_wp();
+    wp -> value = expr (args,&suc);
+    if (!suc) { Assert (1,"Wrong expression\n"); delete_wp(wp -> NO); return 0; }
+    printf ("Watchpoint %d: %s\n",wp -> NO, args);
+    strcpy (wp -> exp, args);
+    printf ("Value : %d\n",wp -> value);
+    return 0;
 }
 
 //execute delete watchingpoint
