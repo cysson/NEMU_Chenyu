@@ -6,15 +6,15 @@
 typedef int (*helper_fun)(swaddr_t);
 static make_helper(_2byte_esc);
 
-#define make_group(name, item0, item1, item2, item3, item4, item5, item6, item7) 
-	static helper_fun concat(opcode_table_, name) [8] = { 
-	/* 0x00 */	item0, item1, item2, item3, 
-	/* 0x04 */	item4, item5, item6, item7  
-	}; 
-	static make_helper(name) { 
-		ModR_M m; 
-		m.val = instr_fetch(eip + 1, 1); 
-		return concat(opcode_table_, name) [m.opcode](eip); 
+#define make_group(name, item0, item1, item2, item3, item4, item5, item6, item7) \
+	static helper_fun concat(opcode_table_, name) [8] = { \
+	/* 0x00 */	item0, item1, item2, item3, \
+	/* 0x04 */	item4, item5, item6, item7  \
+	}; \
+	static make_helper(name) { \
+		ModR_M m; \
+		m.val = instr_fetch(eip + 1, 1); \
+		return concat(opcode_table_, name) [m.opcode](eip); \
 	}
 	
 /* 0x80 */

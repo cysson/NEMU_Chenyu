@@ -1,4 +1,5 @@
 #include "nemu.h"
+#include "monitor/elf.h"
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -7,7 +8,7 @@
 #include <regex.h>
 
 enum {
-    NOTYPE = 256, EQ, NUMBER, REGISTER, HNUMBER, NEQ, AND, OR, POINTER, MINUS,
+    NOTYPE = 256, EQ, NUMBER, REGISTER, HNUMBER, NEQ, AND, OR, POINTER, MINUS, VAR
 
     /* TODO: Add more token types */
 
@@ -38,6 +39,7 @@ static struct rule {
     {"\\)", ')', 7},                // braces
     {"\\b0[xX][0-9a-fA-F]{1,31}\\b",HNUMBER,0},        // hex number
     {"\\$[a-zA-Z]{2,3}",REGISTER,0},                  // register
+    {"[a-zA-Z][A-Za-z0-9_]*", VAR, 0},               //varible
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -145,7 +147,8 @@ uint32_t make_dop(int lp, int rp){
     int dop = lp;
     int min_priority = 10;
     for(i = lp; i <= rp; i ++){
-        if (tokens[i].type == NUMBER || tokens[i].type == HNUMBER || tokens[i].type == REGISTER)
+        if (tokens[i].type == NUMBER || tokens[i].type == HNUMBER 
+                || tokens[i].type == REGISTER || tokens[i].type == VAR)
                     continue;
         int cnt = 0;
         bool key = true;
@@ -155,7 +158,7 @@ uint32_t make_dop(int lp, int rp){
             if (tokens[j].type == ')')cnt ++;
         }
             if (!key)continue;
-            if (tokens[i].priority <= min_priority){min_priority = tokens[i].priority;dop = i;}
+            if (tokens[i].priority <= min_priority){min_priority = tokens[i].priority; dop = i;}
     }
     
     return dop;
@@ -194,8 +197,14 @@ uint32_t eval(int lp, int rp){
                     }
                 }
             }
-            else assert(1);
         }
+        else if (tokens[lp].type == VAR) {
+            bool success = false;
+            num = getVariable(tokens[lp].str, &success);
+            if(!success) Assert(1, "wrong varibale");
+        }
+
+        else assert(1);
         
         return num;
     }
@@ -245,11 +254,15 @@ uint32_t expr(char *e, bool *success) {
     /* TODO: Insert codes to evaluate the expression. */
     int i = 0;
     for (i = 0;i < nr_token; i ++) {
-        if (tokens[i].type == '*' && (i == 0 || (tokens[i - 1].type != NUMBER && tokens[i - 1].type != HNUMBER && tokens[i - 1].type != REGISTER && tokens[i - 1].type !=')'))) {
+        if (tokens[i].type == '*' && 
+                (i == 0 || 
+                    (tokens[i - 1].type != NUMBER && tokens[i - 1].type != HNUMBER && tokens[i - 1].type != REGISTER && tokens[i - 1].type != VAR  && tokens[i - 1].type !=')'))) {
             tokens[i].type = POINTER;
                 tokens[i].priority = 6;
             }
-        if (tokens[i].type == '-' && (i == 0 || (tokens[i - 1].type != NUMBER && tokens[i - 1].type != HNUMBER && tokens[i - 1].type != REGISTER && tokens[i - 1].type !=')'))) {
+        if (tokens[i].type == '-' && 
+                (i == 0 || 
+                    (tokens[i - 1].type != NUMBER && tokens[i - 1].type != HNUMBER && tokens[i - 1].type != REGISTER && tokens[i - 1].type != VAR  && tokens[i - 1].type !=')'))) {
                 tokens[i].type = MINUS;
                 tokens[i].priority = 6;
             }
@@ -258,3 +271,6 @@ uint32_t expr(char *e, bool *success) {
     
     return eval(0, nr_token - 1);
 }
+
+
+

@@ -2,12 +2,13 @@
 #include "cpu/helper.h"
 #include <setjmp.h>
 #include "monitor/watchpoint.h"
+
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INSTR_TO_PRINT -1
+#define MAX_INSTR_TO_PRINT 10
 
 int nemu_state = STOP;
 
@@ -73,16 +74,8 @@ void cpu_exec(volatile uint32_t n) {
 #endif
 
 		/* TODO: check watchpoints here. */
-	// int change = test_change();
-	// if(change){
-	// 	nemu_state = STOP;
-	// }
-	// if (test_change()) {
-    // nemu_state = STOP;  // 如果有监视点的值发生变化，停止CPU执行
-		/* TODO: check watchpoints here. */
-	bool jug = check_wp();
-	if ( !jug ) nemu_state = STOP;
-
+		bool jug = check_wp();
+		if ( !jug ) nemu_state = STOP;
 
 #ifdef HAS_DEVICE
 		extern void device_update();

@@ -5,17 +5,24 @@
 
 typedef struct watchpoint {
 	int NO;
+    int val;
+    char args[32];
 	struct watchpoint *next;
-	char exp[32];
-	uint32_t value;
+
 	/* TODO: Add more members if necessary */
 
 
 } WP;
 
-WP* new_wp();   // 创建一个新的监视点
-int free_wp();     // 释放一个监视点
-bool check_wp();       // 检测监视点值是否变化
-void print_wp();
-int delete_wp(int num);
+WP* new_wp();
+
+void free_wp(WP* wp);
+
+void delete_wp(int);
+
+void info_wp();
+
+bool check_wp();
+
 #endif
+

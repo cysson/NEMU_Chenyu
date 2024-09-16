@@ -6,14 +6,12 @@
 
 static WP wp_pool[NR_WP];
 static WP *head, *free_;
-bool check_wp ();
 
-    
 void init_wp_pool() {
 	int i;
 	for(i = 0; i < NR_WP; i ++) {
 		wp_pool[i].NO = i;
-		wp_pool[i].next = &wp_pool[i + 1];
+		if(NR_WP-1-i) wp_pool[i].next = &wp_pool[i + 1];
 	}
 	wp_pool[NR_WP - 1].next = NULL;
 
@@ -21,51 +19,37 @@ void init_wp_pool() {
 	free_ = wp_pool;
 }
 
-/* TODO: Implement the functionality of watchpoint */
-WP* new_wp(char * exp){
-	assert(free_ != NULL);
-	WP *temp = free_;
-	free_ = free_->next;
-	temp->next = NULL;
-
-	bool success = false;
-	strcpy(temp->exp, exp);
-	temp->value = expr(temp->exp, &success);
-	assert(success);
-
-	if(head==NULL)
-		head = temp;
-	else{
-		WP *p = head;
-		while(p->next)
-			p = p->next;
-		p->next = temp;
-	}
-	return temp;
+WP* new_wp(){
+    WP *n, *p;
+    n = free_;
+    p = head;
+    free_ = free_ -> next;
+    n -> next = NULL;
+    if(p == NULL) { head = n; p = head;}
+    else{
+        while (p -> next) p = p ->next;
+        p -> next = n;
+    }
+    return n;
 }
 
-
-int free_wp(WP *wp) {
-	if(wp == NULL) {
-	    printf("Input something!\n");
-	    return 0;
-	}
-	if(wp == head) {
-	    head = head->next;
-	}
-	else {
-	    WP *p = head;
-	    while(p->next != wp) {
-	        p = p->next;
-	        if(p == NULL) {
-	            return 0; // wp not found
-	        }
-	    }
-	    p->next = wp->next;
-	}
-	wp->next = free_; // Return the wp to the free pool
-	free_ = wp;
-	return 1;
+void free_wp(WP* wp){
+    WP *h, *p;
+    p = free_;
+    if(p == NULL) { p = wp; free_ = wp;}
+    else{
+        while (p -> next) p = p -> next;
+        p -> next = wp;
+    }
+    h = head;
+    if( head == NULL ) assert(0);
+    if ( head -> NO == wp -> NO ) head = head -> next;
+    else{
+        while (h -> next != NULL && h -> next -> NO != wp -> NO) h = h -> next;
+        if(h -> next == NULL && h -> NO == wp -> NO) printf("GHOST!!!");
+        else if (h -> next -> NO == wp -> NO) h -> next = h -> next -> next;
+    }
+    wp -> next = NULL;
 }
 
 bool check_wp(){
@@ -74,44 +58,44 @@ bool check_wp(){
     bool suc, key;
     key = true;
     while(wp != NULL){
-        int val = expr(wp->exp, &suc);  // 使用 wp->exp
+        int val = expr(wp -> args, &suc);
         if(!suc) assert(1);
-        if(wp->value != val){  // 使用 wp->value
+        if(wp -> val != val){
             key = false;
-            printf("Hint breakpoint %d at address 0x%08x\n", wp->NO, cpu.eip);
-            printf("Watchpoint %d: %s\n", wp->NO, wp->exp);  // 使用 wp->exp
-            printf("Old value = %d\n", wp->value);  // 使用 wp->value
-            printf("New value = %d\n", val);
-            wp->value = val;  // 更新 wp->value
+            printf ("Hint breakpoint %d at address 0x%08x\n", wp -> NO, cpu.eip);
+            printf ("Watchpoint %d: %s\n",wp -> NO,wp -> args);
+            printf ("Old value = %d\n",wp -> val);
+            printf ("New value = %d\n",val);
+            wp -> val = val;
         }
-        wp = wp->next;
+        wp = wp ->next;
     }
     
     return key;
 }
 
-
-int delete_wp(int num) {
+void delete_wp(int num){
     WP *p = head;
-    while(p->next && p->next->NO != num) {
-        p = p->next;
-    }
-    if (p->next && p->next->NO == num) {
-        WP *to_delete = p->next;
-        p->next = to_delete->next;
-        free_wp(to_delete);
-        return 1;  // 返回 1 表示成功删除
-    } else {
-        printf("Unexpected number, delete failed\n");
-        return 0;  // 返回 0 表示删除失败
+	while(p -> next && p -> NO != num){
+		p = p -> next;
+	}
+	if( p -> NO == num )
+    	free_wp (p);
+	else
+		printf("unexpected number, delete failed\n");
+}
+
+void info_wp(){
+    WP *p;
+    p = head;
+    while (p != NULL){
+        printf ("Watchpoint %d: %s = %d\n",p -> NO, p -> args, p -> val);
+        p = p -> next;
     }
 }
 
 
-void print_wp() {
-    WP *p = head;
-    while (p != NULL) {
-        printf("Watchpoint %d: %s = %d\n", p->NO, p->exp, p->value);
-        p = p->next;
-    }
-}
+/* TODO: Implement the functionality of watchpoint */
+
+
+
