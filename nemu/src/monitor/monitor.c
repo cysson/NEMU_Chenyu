@@ -87,6 +87,21 @@ void restart() {
 
 	/* Set the initial instruction pointer. */
 	cpu.eip = ENTRY_START;
+  cpu.eflags.val = 0x00000002;
+
+  /* Initialize the cahce */
+  init_cache();
+
+  /* Initialize the TLB*/
+  init_tlb();
+
+  /* Initialize the Segment Register*/
+  cpu.cr0.protect_enable = 0;
+  cpu.cr0.paging = 0;
+
+  /* Initialize CS Register */
+  cpu.cs.base = 0;
+  cpu.cs.limit = 0xffffffff;
 
 	/* Initialize DRAM. */
 	init_ddr3();
