@@ -1,4 +1,5 @@
 #include "nemu.h"
+#include "memory/cache.h"
 #include "memory/tlb.h"
 
 #define ENTRY_START 0x100000
@@ -11,8 +12,7 @@ void load_elf_tables(int, char *[]);
 void init_regex();
 void init_wp_pool();
 void init_ddr3();
-void init_cache();
-void init_tlb();
+
 FILE *log_fp = NULL;
 
 static void init_log() {
@@ -21,7 +21,6 @@ static void init_log() {
 }
 
 static void welcome() {
-printf("-----------------------------------------------------------------------\n-----------------------------------------------------------------------\n                                                                       \n  --  --  -----     --      -  --------  --           --  --        -- \n  --  --    -       - -     -  -         - -         - -  --        -- \n  --  --    -       -  -    -  -         -  -       -  -  --        -- \n  ------    -       -   -   -  --------  -   -     -   -  --        -- \n  --  --    -       -    -  -  -         -    -   -    -  --        -- \n  --  --    -       -     - -  -         -     - -     -   --      --  \n  --  --  -----     -      --  --------  -      -      -     ------    \n                                                                       \n-----------------------------------------------------------------------\n-----------------------------------------------------------------------\n");
 	printf("Welcome to NEMU!\nThe executable is %s.\nFor help, type \"help\"\n",
 			exec_file);
 }
@@ -40,6 +39,7 @@ void init_monitor(int argc, char *argv[]) {
 
 	/* Initialize the watchpoint pool. */
 	init_wp_pool();
+
 
 	/* Display welcome message. */
 	welcome();
